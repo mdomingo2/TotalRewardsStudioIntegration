@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wdnm:Diagram xmlns:wdnm="http://workday.com/studio/editors/notation">
+  <element href="assembly.xml#WorkdayAssembly"/>
+  <visualProperties x="36" y="-3">
+    <element href="assembly.xml#StartHere"/>
+  </visualProperties>
+  <visualProperties x="232" y="-3">
+    <element href="assembly.xml#SetReportAndDesignVars"/>
+  </visualProperties>
+  <visualProperties x="726" y="25">
+    <element href="assembly.xml#PdfPrintStep"/>
+  </visualProperties>
+  <visualProperties x="723" y="187">
+    <element href="assembly.xml#SendToBlobitory"/>
+  </visualProperties>
+  <visualProperties x="36" y="187">
+    <element href="assembly.xml#RequestDataFromTotalRewards"/>
+  </visualProperties>
+  <visualProperties x="36" y="61">
+    <element href="assembly.xml#AsyncMediation0"/>
+  </visualProperties>
+  <visualProperties x="193" y="257">
+    <element href="assembly.xml#SplitOnReportRecord"/>
+  </visualProperties>
+  <visualProperties x="508" y="301">
+    <element href="assembly.xml#PutIntegrationMessage"/>
+  </visualProperties>
+  <connections type="routesResponseTo">
+    <source href="assembly.xml#PdfPrintStep"/>
+    <target href="assembly.xml#SendToBlobitory"/>
+  </connections>
+  <connections type="routesTo" sourceAnchorX="1.0" sourceAnchorY="0.2872340425531915" targetAnchorX="0.104" targetAnchorY="0.1891891891891892">
+    <source href="assembly.xml#SetReportAndDesignVars"/>
+    <target href="assembly.xml#PdfPrintStep"/>
+  </connections>
+  <connections type="routesTo" sourceAnchorX="0.5412844036697247" sourceAnchorY="1.0">
+    <source href="assembly.xml#StartHere"/>
+    <target href="assembly.xml#AsyncMediation0"/>
+  </connections>
+  <connections type="routesTo" sourceAnchorX="0.0" sourceAnchorY="0.26595744680851063" targetAnchorX="0.14893617021276595" targetAnchorY="0.08108108108108109">
+    <source href="assembly.xml#AsyncMediation0"/>
+    <target href="assembly.xml#RequestDataFromTotalRewards"/>
+  </connections>
+  <connections type="routesResponseTo" sourceAnchorX="0.6893617021276596" sourceAnchorY="1.0" targetAnchorX="0.06918238993710692" targetAnchorY="0.3961038961038961">
+    <source href="assembly.xml#RequestDataFromTotalRewards"/>
+    <target href="assembly.xml#SplitOnReportRecord"/>
+  </connections>
+  <connections type="routesTo" sourceAnchorX="0.5753424657534246" sourceAnchorY="1.0" targetAnchorX="0.11452513966480447" targetAnchorY="0.648936170212766">
+    <source href="assembly.xml#//@beans/@mixed.1/@splitter.0/@subRoute.0"/>
+    <target href="assembly.xml#SetReportAndDesignVars"/>
+  </connections>
+  <connections type="routesTo" sourceAnchorX="0.0" sourceAnchorY="0.2765957446808511" targetAnchorX="0.32065217391304346" targetAnchorY="0.0">
+    <source href="assembly.xml#SendToBlobitory"/>
+    <target href="assembly.xml#PutIntegrationMessage"/>
+  </connections>
+</wdnm:Diagram>
