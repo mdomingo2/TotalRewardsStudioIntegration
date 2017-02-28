@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+     xmlns="http://www.springframework.org/schema/beans"
+     xmlns:beans="http://www.springframework.org/schema/beans"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:cc="http://www.capeclear.com/assembly/10"
+     xmlns:cloud="urn:com.workday/esb/cloud/10.0"
+     xmlns:env="http://schemas.xmlsoap.org/soap/envelope/"
+     xmlns:pi="urn:com.workday/picof"
+     xmlns:wd="urn:com.workday/bsvc"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ 
+	<cc:assembly id="WorkdayAssembly" version="2016.34">
+        <cc:workday-in id="StartHere" routes-to="AsyncMediation0">
+            <cc:integration-system name="AcquisitionTotalRewards">
+        <cloud:param name="AcqID">
+          <cloud:type>
+            <cloud:simple-type>text</cloud:simple-type>
+          </cloud:type>
+          <cloud:default>
+            <cloud:text>VRx</cloud:text>
+          </cloud:default>
+          <cloud:launch-option>required</cloud:launch-option>
+        </cloud:param>
+        <cloud:param name="AcqDate">
+          <cloud:type>
+            <cloud:simple-type>date</cloud:simple-type>
+          </cloud:type>
+          <cloud:default>
+            <cloud:date>2017-04-01</cloud:date>
+          </cloud:default>
+          <cloud:launch-option>required</cloud:launch-option>
+        </cloud:param>
+        <cloud:param name="RptDesignWID">
+          <cloud:type>
+            <cloud:simple-type>text</cloud:simple-type>
+          </cloud:type>
+          <cloud:default>
+            <cloud:text>348206576bba103fe474ce28680702d7</cloud:text>
+          </cloud:default>
+        </cloud:param>
+        <cloud:param name="FormLayoutWID">
+          <cloud:type>
+            <cloud:simple-type>text</cloud:simple-type>
+          </cloud:type>
+          <cloud:default>
+            <cloud:text>6cbb9322008c102db2ec310893d6eba5</cloud:text>
+          </cloud:default>
+        </cloud:param>
+        <cloud:report-service name="CallPrintPdf_RS">
+          <cloud:report-alias description="Acquisition Total Rewards Statement" name="acquisitiontotalrewards">
+            <cloud:report-reference description="Acquisition Total Rewards Statement" type="WID">6cbb9322008c102cc5d03866009a54e9</cloud:report-reference>
+          </cloud:report-alias>
+          <cloud:report-alias description="Acquisition Total Rewards Statement" name="AcquisitionTotalRewards">
+            <cloud:report-reference description="Acquisition Total Rewards Statement" type="WID">6cbb9322008c102cc5d03866009a54e9</cloud:report-reference>
+          </cloud:report-alias>
+        </cloud:report-service>
+      </cc:integration-system>
+        </cc:workday-in>
+        <cc:async-mediation id="SetReportAndDesignVars" routes-to="PdfPrintStep" continue-after-error="rewind" handle-downstream-errors="false">
+            <cc:steps>
+                <cc:eval id="ExtractMgrAndEEdata">
+                    <cc:expression>props['pMgrID']=parts[0].xpath('wd:Report_Entry/wd:Manger/wd:MgrWorkdayAcct/wd:ID','wd urn:com.workday.report/acquisition_total_rewards_statement')</cc:expression>
+                    <cc:expression>props['pEEName']=parts[0].xpath('wd:Report_Entry/wd:Worker/@wd:Descriptor','wd urn:com.workday.report/acquisition_total_rewards_statement')</cc:expression>
+                </cc:eval>
+                <cc:write id="WriteReportToVariable" output="variable" output-mimetype="text/xml" output-variable="workday.report" input="message">
+                    <cc:message>
+                        <cc:text>&lt;?xml version='1.0' encoding='UTF-8'?>&#xD;
+&lt;wd:Report_Data xmlns:wd=&quot;urn:com.workday.report/acquisition_total_rewards_statement&quot;></cc:text>
+                        <cc:message-content/>
+                        <cc:text>&lt;/wd:Report_Data></cc:text>
+                    </cc:message>
+                </cc:write>
+                <cc:write id="CopyReportDesignToVariable" output="variable" output-mimetype="text/plain" output-variable="report.design" input="message">
+                    <cc:message>
+                        <cc:static-file input-file="Acquisition_Total_Rewards.rptdesign"/>
+                    </cc:message>
+                </cc:write>
+            </cc:steps>
+        </cc:async-mediation>
+        <cc:local-out id="PdfPrintStep" routes-response-to="SendToBlobitory" endpoint="vm://wcc/PdfPrintStep"><cc:set name="pdf.workday.report.variable" value="'workday.report'"/><cc:set name="pdf.report.design.variable" value="'report.design'"/><cc:set name="pdf.apply.report.design.per.row" value="true"/><cc:set name="pdf.report.design.wid" value=" lp.getSimpleData('RptDesignWID')"/><cc:set name="pdf.business.form.layout.wid" value="lp.getSimpleData('FormLayoutWID')"/></cc:local-out>
+        <cc:async-mediation id="SendToBlobitory" routes-to="PutIntegrationMessage">
+            <cc:steps>
+                <cc:log id="Log">
+                    <cc:log-message>
+                        <cc:line-separator/>
+                        <cc:text>EmployeeName = @{props['pEEName']} -- Writing to Blobitory&#xD;
+</cc:text>
+                        <cc:line-separator/>
+                        <cc:message-content/>
+                    </cc:log-message>
+                </cc:log>
+                <cc:store id="Store" output="variable" output-mimetype="application/pdf" output-variable="output.document.reference" assignOwner="false" contentDisposition="attachment;filename=&quot;@{props['pEEName']}_TotalRewards.pdf&quot;" expiresIn="P3M" summary="Total Rewards Statement" title="@{props['pEEName']}_TotalRewards.pdf"/>
+            </cc:steps>
+        </cc:async-mediation>
+        <cc:workday-out-rest id="RequestDataFromTotalRewards" store-message="response" routes-response-to="SplitOnReportRecord" extra-path="@{intsys.reportService.getExtrapath('AcquisitionTotalRewards')}?AcquisitionName=@{props['pAcqID']}&amp;Effective_as_of_Date=@{props['pAcqDate']}"/>
+	<cc:async-mediation id="AsyncMediation0" routes-to="RequestDataFromTotalRewards"><cc:steps>
+                <cc:eval id="Eval">
+                    <cc:expression>props['pAcqID']=lp.getSimpleData('AcqID')</cc:expression>
+                    <cc:expression>props['pAcqDate']=lp.getSimpleData('AcqDate')</cc:expression>
+                </cc:eval>
+            </cc:steps></cc:async-mediation>
+        <cc:splitter id="SplitOnReportRecord">
+            <cc:sub-route name="SubRoute" routes-to="SetReportAndDesignVars"/>
+            <cc:xml-stream-splitter namespaces="wd urn:com.workday.report/acquisition_total_rewards_statement" xpath="/wd:Report_Data/wd:Report_Entry"/>
+        </cc:splitter>
+        <cc:local-out id="PutIntegrationMessage" endpoint="vm://wcc/PutIntegrationMessage"><cc:set name="is.message.severity" value="'INFO'"/><cc:set name="is.message.summary" value="'Record Complete'"/><cc:set name="is.document.owner.wid" value="props['pMgrID']"/><cc:set name="is.document.variable.name" value="'output.document.reference'"/></cc:local-out>
+    </cc:assembly>
+
+</beans>
